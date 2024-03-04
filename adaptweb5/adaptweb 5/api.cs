@@ -1,4 +1,6 @@
-﻿using System.Net.Http.Json;
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 public class Api
 {
@@ -18,6 +20,52 @@ public class Api
     {
         return await GetDataAsync<T>(url, HttpMethod.Post, payload);
     }
+
+    public async Task<WeatherResponse<T>> PostAndSaveAsync<T>(string url, object payload, string fileName)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(url, payload);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadFromJsonAsync<T>();
+                string fullPath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+                string jsonData = JsonSerializer.Serialize(data);
+                await File.WriteAllTextAsync(fullPath, jsonData);
+
+                return new WeatherResponse<T>
+                {
+                    Data = data,
+                    HttpStatusCode = response.StatusCode,
+                    Message = "Success",
+                    ApiDataList = new List<T> { data }
+                };
+            }
+            else
+            {
+                return new WeatherResponse<T>
+                {
+                    Data = default,
+                    HttpStatusCode = response.StatusCode,
+                    Message = $"Failed to get data. Status code: {response.StatusCode}",
+                    ApiDataList = new List<T>()
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            return new WeatherResponse<T>
+            {
+                Data = default,
+                HttpStatusCode = HttpStatusCode.InternalServerError,
+                Message = $"An error occurred: {ex.Message}",
+                ApiDataList = new List<T>()
+            };
+        }
+    }
+
+
 
     private async Task<WeatherResponse<T>> GetDataAsync<T>(string url, HttpMethod method, object payload = null)
     {
