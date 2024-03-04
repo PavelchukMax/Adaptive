@@ -1,4 +1,4 @@
-﻿using adaptweb_5;
+using adaptweb_5;
 
 public class Program
 {
@@ -24,7 +24,6 @@ public class Program
             Console.WriteLine($"Temperature: {currentWeatherResponse.Data.Temperature}°C");
             Console.WriteLine($"Weather Description: {currentWeatherResponse.Data.WeatherDescription}");
         }
-
         Console.WriteLine();
 
         Console.WriteLine("Weather Forecast for the next 7 days:");
@@ -41,5 +40,12 @@ public class Program
                 Console.WriteLine();
             }
         }
+        var postAndSaveResponse = await weatherApiClient.PostAndSaveAsync<WeatherForecast>(forecastUrl, null, "weather_forecast.txt");
+        Console.WriteLine($"Weather forecast data saved to: weather_forecast.txt");
+        string currentDirectory = Environment.CurrentDirectory;
+        string fullPath = Path.Combine(currentDirectory, "weather_forecast.txt");
+        Console.WriteLine($"Full path to saved forecast data: {fullPath}");
+        Console.WriteLine($"Status Code (POST and Save): {postAndSaveResponse.HttpStatusCode}");
+        Console.WriteLine($"Message (POST and Save): {postAndSaveResponse.Message}");
     }
 }
